@@ -46,7 +46,7 @@ public class EventTest {
         }
     }
 
-    public class EvilEvent {}
+    public class EvilEvent extends Event {}
 
-    public class TestEvent {}
+    public class TestEvent extends Event {}
 }
