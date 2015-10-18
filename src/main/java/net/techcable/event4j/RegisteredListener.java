@@ -9,16 +9,15 @@ import java.lang.reflect.Method;
 @EqualsAndHashCode(of = {"listener", "method"})
 public class RegisteredListener implements Comparable<RegisteredListener> {
     @Getter
-    private final Listener listener;
+    private final Object listener;
     private final Method method;
 
-    public RegisteredListener(Listener listener, Method method) {
+    public RegisteredListener(Object listener, Method method) {
         this.listener = listener;
         this.method = method;
         method.setAccessible(true);
         if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + toString());
         if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + toString());
-        if (!Event.class.isAssignableFrom(method.getParameterTypes()[0])) throw new IllegalArgumentException(toString() + " must accept an event, not a " + method.getParameterTypes()[0].getSimpleName());
     }
 
     public final void fire(Object event) {
@@ -31,8 +30,8 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
         }
     }
 
-    public Class<? extends Event> getEventType() {
-        return method.getParameterTypes()[0].asSubclass(Event.class);
+    public Class<?> getEventType() {
+        return method.getParameterTypes()[0];
     }
 
     public EventPriority getPriority() {

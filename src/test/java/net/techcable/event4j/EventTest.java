@@ -3,7 +3,7 @@ package net.techcable.event4j;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class EventTest {
     private final EventBus eventBus = new EventBus();
@@ -15,7 +15,6 @@ public class EventTest {
         this.testListener = new TestListener();
         eventBus.register(testListener);
     }
-
 
     @Test
     public void testEvent() {
@@ -34,7 +33,7 @@ public class EventTest {
         eventBus.unregister(testListener);
     }
 
-    public class TestListener implements Listener {
+    public class TestListener {
         @EventHandler
         public void onTest(TestEvent event) {
             EventTest.this.awesome = true; // We are awesome
@@ -46,7 +45,9 @@ public class EventTest {
         }
     }
 
-    public class EvilEvent extends Event {}
+    public class EvilEvent {
+    }
 
-    public class TestEvent extends Event {}
+    public class TestEvent {
+    }
 }

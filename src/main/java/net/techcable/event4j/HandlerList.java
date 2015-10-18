@@ -8,9 +8,9 @@ import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class HandlerList {
-    private final Class<? extends Event> eventType;
+    private final Class<?> eventType;
 
-    public void fire(Event event) {
+    public void fire(Object event) {
         if (!eventType.isInstance(event)) return; // Sanity
         for (RegisteredListener listener : baked()) {
             listener.fire(event);
