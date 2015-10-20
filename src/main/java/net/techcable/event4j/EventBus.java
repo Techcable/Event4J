@@ -23,7 +23,8 @@ public class EventBus<E, L> {
 
     public void fire(E event) {
         if (event == null) throw new NullPointerException("Null event");
-        if (!eventClass.isInstance(event)) throw new IllegalArgumentException("Invalid event type: " + event.getClass().getName());
+        if (!eventClass.isInstance(event))
+            throw new IllegalArgumentException("Invalid event type: " + event.getClass().getName());
         HandlerList<E, L> handlerList = getHandler(event);
         if (handlerList == null) return;
         final boolean sync = event instanceof SynchronizedEvent;
@@ -50,7 +51,8 @@ public class EventBus<E, L> {
 
     public void register(L listener) {
         if (listener == null) throw new NullPointerException("Null listener");
-        if (!listenerClass.isInstance(listener)) throw new IllegalArgumentException("Invalid listener type: " + listener.getClass().getName());
+        if (!listenerClass.isInstance(listener))
+            throw new IllegalArgumentException("Invalid listener type: " + listener.getClass().getName());
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!RegisteredListener.isEventHandler(method)) continue; // Not a handler
             RegisteredListener<E, L> registeredListener = new RegisteredListener<>(this, listener, method);
@@ -93,16 +95,21 @@ public class EventBus<E, L> {
     public static class Builder<E, L> {
         private Class<?> eventClass = Object.class;
         private Class<?> listenerClass = Object.class;
-        private EventMarker eventMarkerFactory = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) () -> m.getAnnotation(EventHandler.class).priority() : null;
+        private EventMarker eventMarker = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) () -> m.getAnnotation(EventHandler.class).priority() : null;
 
-        public <E, L> Builder<E, L> setTypes(Class<E> eventClass, Class<L> listenerClass) {
+        public <E> Builder<E, L> eventClass(Class<E> eventClass) {
             this.eventClass = eventClass;
+            return (Builder<E, L>) this;
+        }
+
+        public <L> Builder<E, L> listenerClass(Class<L> listenerClass) {
             this.listenerClass = listenerClass;
             return (Builder<E, L>) this;
         }
 
-        public void eventMarkerPriority(EventMarker marker) {
-            this.eventMarkerFactory = marker;
+        public Builder<E, L> eventMarker(EventMarker eventMarker) {
+            this.eventMarker = eventMarker;
+            return this;
         }
 
         public EventBus<E, L> build() {
