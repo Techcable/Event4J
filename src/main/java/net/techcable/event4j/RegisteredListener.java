@@ -1,26 +1,28 @@
 package net.techcable.event4j;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @EqualsAndHashCode(of = {"listener", "method"})
-public class RegisteredListener implements Comparable<RegisteredListener> {
+public class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
+    private final EventBus<E, L> eventBus;
     @Getter
-    private final Object listener;
+    private final L listener;
     private final Method method;
 
-    public RegisteredListener(Object listener, Method method) {
+    public RegisteredListener(EventBus<E, L> eventBus, L listener, Method method) {
+        this.eventBus = eventBus;
         this.listener = listener;
         this.method = method;
         method.setAccessible(true);
         if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + toString());
         if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + toString());
+        if (!eventBus.getEventClass().isInstance(method.getParameterTypes()[0])) throw new IllegalArgumentException("EventHandler must accept one argument: " + method.getParameterTypes()[0].getSimpleName());
     }
 
-    public final void fire(Object event) {
+    public final void fire(E event) {
         try {
             method.invoke(listener, event);
         } catch (IllegalAccessException e) {
@@ -30,8 +32,8 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
         }
     }
 
-    public Class<?> getEventType() {
-        return method.getParameterTypes()[0];
+    public Class<? extends E> getEventType() {
+        return method.getParameterTypes()[0].asSubclass(eventBus.getEventClass());
     }
 
     public EventPriority getPriority() {
@@ -40,7 +42,7 @@ public class RegisteredListener implements Comparable<RegisteredListener> {
 
     @Override
     public String toString() {
-       return listener.getClass().getName() + "::" + method.getName();
+        return listener.getClass().getName() + "::" + method.getName();
     }
 
     public static boolean isEventHandler(Method method) {

@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class EventTest {
-    private final EventBus eventBus = new EventBus();
+    private final EventBus eventBus = EventBus.build();
     private boolean awesome;
     private TestListener testListener;
 

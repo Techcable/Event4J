@@ -1,23 +1,23 @@
 package net.techcable.event4j;
 
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 @RequiredArgsConstructor
-public class HandlerList {
-    private final Class<?> eventType;
+public class HandlerList<E, L> {
+    private final EventBus<E, L> eventBus;
 
-    public void fire(Object event) {
-        if (!eventType.isInstance(event)) return; // Sanity
-        for (RegisteredListener listener : baked()) {
+    public void fire(E event) {
+        for (RegisteredListener<E, L> listener : baked()) {
             listener.fire(event);
         }
     }
 
-    public void register(RegisteredListener listener) {
+    public void register(RegisteredListener<E, L> listener) {
         listenerSet.add(listener);
         bakedListeners = null;
     }
@@ -27,9 +27,11 @@ public class HandlerList {
         bakedListeners = null;
     }
 
-    private final Set<RegisteredListener> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<RegisteredListener<E, L>> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private volatile RegisteredListener[] bakedListeners = null;
-    private RegisteredListener[] baked() {
+
+    @SuppressWarnings("unchecked")
+    private RegisteredListener<E, L>[] baked() {
         RegisteredListener[] baked = this.bakedListeners;
         if (baked == null) {
             synchronized (this) {
