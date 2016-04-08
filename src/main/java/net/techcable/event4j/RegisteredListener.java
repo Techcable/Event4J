@@ -14,7 +14,7 @@ public abstract class RegisteredListener<E, L> implements Comparable<RegisteredL
     public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener) {
         if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + toString());
         if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + toString());
-        if (!eventBus.getEventClass().isInstance(method.getParameterTypes()[0])) throw new IllegalArgumentException("EventHandler must accept one argument: " + method.getParameterTypes()[0].getSimpleName());
+        if (!eventBus.getEventClass().isAssignableFrom(method.getParameterTypes()[0])) throw new IllegalArgumentException("EventHandler must accept one argument: " + method.getParameterTypes()[0].getSimpleName());
         this.eventBus = eventBus;
         this.method = method;
         this.listener = listener;
