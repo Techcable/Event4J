@@ -17,7 +17,7 @@ public class HandlerList<E, L> {
         }
     }
 
-    public void register(RegisteredListener<E, L> listener) {
+    public void register(RegisteredListener<E,L> listener) {
         listenerSet.add(listener);
         bakedListeners = null;
     }
@@ -27,19 +27,23 @@ public class HandlerList<E, L> {
         bakedListeners = null;
     }
 
-    private final Set<RegisteredListener<E, L>> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<RegisteredListener<E,L>> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private volatile RegisteredListener[] bakedListeners = null;
 
     @SuppressWarnings("unchecked")
     private RegisteredListener<E, L>[] baked() {
         RegisteredListener[] baked = this.bakedListeners;
-        if (baked == null) {
-            synchronized (this) {
-                if ((baked = this.bakedListeners) == null) { // In case someone else baked while we were locking
-                    baked = listenerSet.toArray(new RegisteredListener[listenerSet.size()]);
-                    Arrays.sort(baked);
-                    this.bakedListeners = baked;
-                }
+        if (baked == null) baked = bakeListeners(); // Seperate method to assist inlining
+        return baked;
+    }
+
+    private RegisteredListener[] bakeListeners() {
+        RegisteredListener[] baked;
+        synchronized (this) {
+            if ((baked = this.bakedListeners) == null) { // In case someone else baked while we were locking
+                baked = listenerSet.toArray(new RegisteredListener[listenerSet.size()]);
+                Arrays.sort(baked);
+                this.bakedListeners = baked;
             }
         }
         return baked;

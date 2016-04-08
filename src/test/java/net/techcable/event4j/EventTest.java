@@ -23,7 +23,7 @@ public class EventTest {
         assertTrue(this.awesome);
     }
 
-    @Test(expected = EventException.class)
+    @Test(expected = RuntimeException.class)
     public void testException() {
         eventBus.fire(new EvilEvent());
     }
