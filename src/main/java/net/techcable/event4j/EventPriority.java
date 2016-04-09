@@ -5,5 +5,6 @@ public enum EventPriority {
     LOW,
     NORMAL,
     HIGH,
+    HIGHEST,
     MONITOR;
 }

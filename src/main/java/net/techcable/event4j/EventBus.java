@@ -73,7 +73,7 @@ public final class EventBus<E, L> {
     public static class Builder<E, L> {
         private Class<?> eventClass = Object.class;
         private Class<?> listenerClass = Object.class;
-        private EventMarker eventMarker = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) () -> m.getAnnotation(EventHandler.class).priority() : null;
+        private EventMarker eventMarker = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) m.getAnnotation(EventHandler.class).priority()::ordinal : null;
         private EventExecutor.Factory executorFactory = EventExecutor.Factory.getDefault();
 
         public <E> Builder<E, L> eventClass(Class<E> eventClass) {
