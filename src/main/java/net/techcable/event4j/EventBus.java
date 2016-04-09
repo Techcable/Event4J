@@ -36,7 +36,7 @@ public final class EventBus<E, L> {
     }
 
     public void unregister(L listener) {
-        if (listenerClass.isInstance(listener)) return;
+        if (!listenerClass.isInstance(listener)) throw new IllegalArgumentException("Invalid listener type: "  + listener.getClass().getClass());
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!eventMarker.isMarked(method)) continue; // Not a handler
             RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener, EventExecutor.empty());

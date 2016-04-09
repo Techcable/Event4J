@@ -55,7 +55,7 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
     @Override
     public boolean equals(Object obj) {
         if (obj == this || obj == null) return false;
-        if (obj.getClass() == MHEventExecutor.class) {
+        if (obj.getClass() == RegisteredListener.class) {
             RegisteredListener other = (RegisteredListener) obj;
             return other.eventBus == this.eventBus && other.getListener() == this.getListener() && other.getMethod().equals(this.getMethod()); // Reference equality for listeners
         }
@@ -64,7 +64,7 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
 
     @Override
     public int hashCode() {
-        return getMethod().hashCode() ^ getListener().hashCode(); // XOR is good for combinding two hashcodes, and we don't use identity hash code since listeners may overide with a better one, and hashcodes never change
+        return getMethod().hashCode() ^ getListener().hashCode(); // XOR is good for combining two hashcodes, and we don't use identity hash code since listeners may overide with a better one, and hashcodes never change
     }
 
     @Override
