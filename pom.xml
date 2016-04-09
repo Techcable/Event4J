@@ -6,7 +6,7 @@
         <version>1.0.7</version>
     </parent>
     <artifactId>event4j</artifactId>
-    <version>1.1.0-beta3-SNAPSHOT</version>
+    <version>1.1.0-beta3</version>
     <name>Event4J</name>
     <properties>
         <java.version>1.8</java.version>
@@ -18,6 +18,15 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>5.0.4</version>
+            <!-- This *will* show up on the test classpath -->
+            <scope>provided</scope>
+            <!-- We can run without ASM ;) -->
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

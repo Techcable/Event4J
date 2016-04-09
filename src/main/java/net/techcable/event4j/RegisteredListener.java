@@ -3,28 +3,41 @@ package net.techcable.event4j;
 import lombok.*;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
-public abstract class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
+public final class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
+    @Getter
     protected final EventBus<E, L> eventBus;
     @Getter
     protected final L listener;
     @Getter
     protected final Method method;
+    private final EventExecutor<E, L> executor;
 
-    public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener) {
-        if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + toString());
-        if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + toString());
+    public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener, EventExecutor<E, L> executor) {
+        this.eventBus = Objects.requireNonNull(eventBus, "Null eventBus");;
+        this.method = Objects.requireNonNull(method, "Null method");;
+        this.listener = Objects.requireNonNull(listener, "Null listener");
+        this.executor = Objects.requireNonNull(executor, "Null executor");
+        validate(eventBus, method);
+    }
+
+    public static <E, L> void validate(EventBus<E, L> eventBus, Method method) {
+        Objects.requireNonNull(eventBus, "Null eventBus");
+        Objects.requireNonNull(method, "Null method");
+        if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + method.getDeclaringClass().getName() + "::" + method.getName());
+        if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + method.getDeclaringClass().getName() + "::" + method.getName());
         if (!eventBus.getEventClass().isAssignableFrom(method.getParameterTypes()[0])) throw new IllegalArgumentException("EventHandler must accept one argument: " + method.getParameterTypes()[0].getSimpleName());
-        this.eventBus = eventBus;
-        this.method = method;
-        this.listener = listener;
+        if (!eventBus.getListenerClass().isAssignableFrom(method.getDeclaringClass())) throw new IllegalArgumentException("Listener " + method.getDeclaringClass() + " must be instanceof " + eventBus.getListenerClass());
     }
 
     public static boolean isEventHandler(Method method) {
         return method.isAnnotationPresent(EventHandler.class);
     }
 
-    public abstract void fire(E event);
+    public void fire(E event) {
+        executor.fire(listener, event);
+    }
 
     public Class<? extends E> getEventType() {
         return method.getParameterTypes()[0].asSubclass(eventBus.getEventClass());
@@ -42,9 +55,9 @@ public abstract class RegisteredListener<E, L> implements Comparable<RegisteredL
     @Override
     public boolean equals(Object obj) {
         if (obj == this || obj == null) return false;
-        if (obj.getClass() == MHRegisteredListener.class) {
+        if (obj.getClass() == MHEventExecutor.class) {
             RegisteredListener other = (RegisteredListener) obj;
-            return other.getListener() == this.getListener() && other.getMethod().equals(this.getMethod()); // Reference equality for listeners
+            return other.eventBus == this.eventBus && other.getListener() == this.getListener() && other.getMethod().equals(this.getMethod()); // Reference equality for listeners
         }
         return false;
     }
@@ -57,17 +70,5 @@ public abstract class RegisteredListener<E, L> implements Comparable<RegisteredL
     @Override
     public int compareTo(RegisteredListener other) {
         return this.getPriority().compareTo(other.getPriority());
-    }
-
-    @FunctionalInterface
-    public interface Factory {
-        public static final Factory METHOD_HANDLE_LISTENER_FACTORY = MHRegisteredListener::new;
-        public static final Factory REFLECTION_LISTENER_FACTORY = ReflectionRegisteredListener::new;
-
-        public <E, L> RegisteredListener<E, L> create(EventBus<E, L> bus, Method method, L listener);
-
-        public static Factory getDefault() {
-            return METHOD_HANDLE_LISTENER_FACTORY;
-        }
     }
 }

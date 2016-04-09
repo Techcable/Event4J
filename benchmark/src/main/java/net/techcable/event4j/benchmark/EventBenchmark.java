@@ -1,6 +1,7 @@
 package net.techcable.event4j.benchmark;
 
 import net.techcable.event4j.EventBus;
+import net.techcable.event4j.EventExecutor;
 import net.techcable.event4j.EventHandler;
 import net.techcable.event4j.RegisteredListener;
 
@@ -14,6 +15,7 @@ import org.openjdk.jmh.infra.Blackhole;
 public class EventBenchmark {
     private EventBus<TestEvent, TestListener> methodHandleBus;
     private EventBus<TestEvent, TestListener> reflectionBus;
+    private EventBus<TestEvent, TestListener> asmBus;
 
     @Benchmark
     public void testMethodHandleSpeed() {
@@ -25,18 +27,28 @@ public class EventBenchmark {
         reflectionBus.fire(new TestEvent());
     }
 
+    @Benchmark
+    public void testASMSpeed() {
+        asmBus.fire(new TestEvent());
+    }
+
     @Setup
     public void setup(Blackhole blackhole) {
         TestListener listener = new TestListener(blackhole);
         methodHandleBus = EventBus.builder()
                 .eventClass(TestEvent.class) // Specify test event as the master class to accurately test casting sped
                 .listenerClass(TestListener.class) // Specify test listener as the master class to accurately test casting speed
-                .listenerFactory(RegisteredListener.Factory.METHOD_HANDLE_LISTENER_FACTORY)
+                .executorFactory(EventExecutor.Factory.METHOD_HANDLE_LISTENER_FACTORY)
                 .build();
         reflectionBus = EventBus.builder()
                 .eventClass(TestEvent.class)
                 .listenerClass(TestListener.class)
-                .listenerFactory(RegisteredListener.Factory.REFLECTION_LISTENER_FACTORY)
+                .executorFactory(EventExecutor.Factory.REFLECTION_LISTENER_FACTORY)
+                .build();
+        asmBus = EventBus.builder()
+                .eventClass(TestEvent.class)
+                .listenerClass(TestListener.class)
+                .executorFactory(EventExecutor.Factory.ASM_LISTENER_FACTORY.get())
                 .build();
         methodHandleBus.register(listener);
         reflectionBus.register(listener);

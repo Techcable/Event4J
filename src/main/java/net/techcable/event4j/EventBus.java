@@ -11,9 +11,9 @@ import net.techcable.event4j.marker.EventMarker;
 import net.techcable.event4j.marker.MarkedEvent;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class EventBus<E, L> {
+public final class EventBus<E, L> {
     private final ConcurrentMap<Class<?>, HandlerList<E, L>> handlers = new ConcurrentHashMap<>();
-    private final RegisteredListener.Factory listenerFactory;
+    private final EventExecutor.Factory executorFactory;
     @Getter
     private final Class<E> eventClass;
     @Getter
@@ -28,9 +28,8 @@ public class EventBus<E, L> {
      */
     public void fire(E event) {
         if (event == null) throw new NullPointerException("Null event"); // This should be optimized away by the JIT
-        eventClass.cast(event); // This is a JIT intristic, and its more efficient to check here then in each individual listener
         HandlerList<E, L> handler = handlers.get(event.getClass());
-        if (handler == null) return; // No events of said type (will be optimized away by JIT)
+        if (handler == null) return; // No events of said type
         handler.fire(event);
     }
 
@@ -38,7 +37,7 @@ public class EventBus<E, L> {
         if (listenerClass.isInstance(listener)) return;
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!RegisteredListener.isEventHandler(method)) continue; // Not a handler
-            RegisteredListener<E,L> registeredListener = listenerFactory.create(this, method, listener);
+            RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener, EventExecutor.empty());
             handlers.get(registeredListener.getEventType()).unregister(registeredListener);
         }
     }
@@ -49,7 +48,7 @@ public class EventBus<E, L> {
             throw new IllegalArgumentException("Invalid listener type: " + listener.getClass().getName());
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!RegisteredListener.isEventHandler(method)) continue; // Not a handler
-            RegisteredListener<E,L> registeredListener = listenerFactory.create(this, method, listener);
+            RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener , executorFactory.create(this, method));
             register(registeredListener);
         }
     }
@@ -75,7 +74,7 @@ public class EventBus<E, L> {
         private Class<?> eventClass = Object.class;
         private Class<?> listenerClass = Object.class;
         private EventMarker eventMarker = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) () -> m.getAnnotation(EventHandler.class).priority() : null;
-        private RegisteredListener.Factory listenerFactory = RegisteredListener.Factory.getDefault();
+        private EventExecutor.Factory executorFactory = EventExecutor.Factory.getDefault();
 
         public <E> Builder<E, L> eventClass(Class<E> eventClass) {
             this.eventClass = Objects.requireNonNull(eventClass, "Null event class");
@@ -92,13 +91,13 @@ public class EventBus<E, L> {
             return this;
         }
 
-        public Builder<E, L> listenerFactory(RegisteredListener.Factory factory) {
-            this.listenerFactory = Objects.requireNonNull(factory, "Null listener factory");
+        public Builder<E, L> executorFactory(EventExecutor.Factory factory) {
+            this.executorFactory = Objects.requireNonNull(factory, "Null exevutor factory");
             return this;
         }
 
         public EventBus<E, L> build() {
-            return new EventBus<>(listenerFactory,  (Class<E>) eventClass, (Class<L>) listenerClass);
+            return new EventBus<>(executorFactory,  (Class<E>) eventClass, (Class<L>) listenerClass);
         }
     }
 }
