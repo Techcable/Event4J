@@ -5,6 +5,8 @@ import lombok.*;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
+import net.techcable.event4j.marker.MarkedEvent;
+
 public final class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
     @Getter
     protected final EventBus<E, L> eventBus;
@@ -12,27 +14,25 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
     protected final L listener;
     @Getter
     protected final Method method;
+    private final MarkedEvent marked;
     private final EventExecutor<E, L> executor;
 
     public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener, EventExecutor<E, L> executor) {
+        validate(eventBus, method);
         this.eventBus = Objects.requireNonNull(eventBus, "Null eventBus");;
         this.method = Objects.requireNonNull(method, "Null method");;
         this.listener = Objects.requireNonNull(listener, "Null listener");
         this.executor = Objects.requireNonNull(executor, "Null executor");
-        validate(eventBus, method);
+        this.marked = Objects.requireNonNull(eventBus.getEventMarker().mark(method), "Null marked event");
     }
 
     public static <E, L> void validate(EventBus<E, L> eventBus, Method method) {
         Objects.requireNonNull(eventBus, "Null eventBus");
         Objects.requireNonNull(method, "Null method");
-        if (!isEventHandler(method)) throw new IllegalArgumentException("Method must be an event handler: " + method.getDeclaringClass().getName() + "::" + method.getName());
+        if (!eventBus.getEventMarker().isMarked(method)) throw new IllegalArgumentException("Method must be an event handler: " + method.getDeclaringClass().getName() + "::" + method.getName());
         if (method.getParameterCount() != 1) throw new IllegalArgumentException("EventHandlers must have only one argument: " + method.getDeclaringClass().getName() + "::" + method.getName());
         if (!eventBus.getEventClass().isAssignableFrom(method.getParameterTypes()[0])) throw new IllegalArgumentException("EventHandler must accept one argument: " + method.getParameterTypes()[0].getSimpleName());
         if (!eventBus.getListenerClass().isAssignableFrom(method.getDeclaringClass())) throw new IllegalArgumentException("Listener " + method.getDeclaringClass() + " must be instanceof " + eventBus.getListenerClass());
-    }
-
-    public static boolean isEventHandler(Method method) {
-        return method.isAnnotationPresent(EventHandler.class);
     }
 
     public void fire(E event) {
@@ -43,8 +43,8 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
         return method.getParameterTypes()[0].asSubclass(eventBus.getEventClass());
     }
 
-    public EventPriority getPriority() {
-        return method.getAnnotation(EventHandler.class).priority();
+    public int getPriority() {
+        return marked.getPriority();
     }
 
     @Override
@@ -69,6 +69,6 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
 
     @Override
     public int compareTo(RegisteredListener other) {
-        return this.getPriority().compareTo(other.getPriority());
+        return Integer.compare(this.getPriority(), other.getPriority());
     }
 }

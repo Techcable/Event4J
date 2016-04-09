@@ -13,6 +13,8 @@ import net.techcable.event4j.marker.MarkedEvent;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EventBus<E, L> {
     private final ConcurrentMap<Class<?>, HandlerList<E, L>> handlers = new ConcurrentHashMap<>();
+    @Getter(AccessLevel.PROTECTED)
+    private final EventMarker eventMarker;
     private final EventExecutor.Factory executorFactory;
     @Getter
     private final Class<E> eventClass;
@@ -36,7 +38,7 @@ public final class EventBus<E, L> {
     public void unregister(L listener) {
         if (listenerClass.isInstance(listener)) return;
         for (Method method : listener.getClass().getDeclaredMethods()) {
-            if (!RegisteredListener.isEventHandler(method)) continue; // Not a handler
+            if (!eventMarker.isMarked(method)) continue; // Not a handler
             RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener, EventExecutor.empty());
             handlers.get(registeredListener.getEventType()).unregister(registeredListener);
         }
@@ -47,7 +49,7 @@ public final class EventBus<E, L> {
         if (!listenerClass.isInstance(listener))
             throw new IllegalArgumentException("Invalid listener type: " + listener.getClass().getName());
         for (Method method : listener.getClass().getDeclaredMethods()) {
-            if (!RegisteredListener.isEventHandler(method)) continue; // Not a handler
+            if (!eventMarker.isMarked(method)) continue; // Not a handler
             RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener , executorFactory.create(this, method));
             register(registeredListener);
         }
@@ -97,7 +99,7 @@ public final class EventBus<E, L> {
         }
 
         public EventBus<E, L> build() {
-            return new EventBus<>(executorFactory,  (Class<E>) eventClass, (Class<L>) listenerClass);
+            return new EventBus<>(eventMarker, executorFactory,  (Class<E>) eventClass, (Class<L>) listenerClass);
         }
     }
 }
