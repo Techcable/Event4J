@@ -52,6 +52,7 @@ public class EventBenchmark {
                 .build();
         methodHandleBus.register(listener);
         reflectionBus.register(listener);
+        asmBus.register(listener);
     }
 
     public static class TestListener {
