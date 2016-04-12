@@ -10,7 +10,7 @@ A annotation-based event system for java
   - Optionaly uses ASM for faster event invocation
     - ASM invocation is [an order of magnitude](benchmarks/Results.md) faster than reflection
 - Fast
-  - [Benchmarks](benchmarks/Results.md) available
+  - [Benchmarks](benchmark/Results.md) available
 - Thread Safe
   - Synchronous Events
     - Only one of these events may be executing at a time
