@@ -69,6 +69,14 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
 
     @Override
     public int compareTo(RegisteredListener other) {
-        return Integer.compare(this.getPriority(), other.getPriority());
+        int t = Integer.compare(other.getPriority(), this.getPriority());
+        if (t != 0) {
+            return t;
+        }
+        t = Integer.compare(this.eventBus.hashCode(), other.eventBus.hashCode());
+        if (t != 0) {
+            return t;
+        }
+        return Integer.compare(this.hashCode(), other.hashCode());
     }
 }
