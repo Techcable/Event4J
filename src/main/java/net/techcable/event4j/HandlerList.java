@@ -5,6 +5,9 @@ import lombok.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
@@ -27,7 +30,8 @@ public class HandlerList<E, L> {
         bakedListeners = null;
     }
 
-    private final Set<RegisteredListener<E,L>> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final SortedSet<RegisteredListener<E,L>> listenerSet = Collections.synchronizedSortedSet(new TreeSet<>());
+    private final SortedSet<RegisteredListener> immutableSet = Collections.unmodifiableSortedSet((SortedSet<RegisteredListener>)(Object)listenerSet);
     private volatile RegisteredListener[] bakedListeners = null;
 
     @SuppressWarnings("unchecked")
@@ -41,15 +45,13 @@ public class HandlerList<E, L> {
         RegisteredListener[] baked;
         synchronized (this) {
             if ((baked = this.bakedListeners) == null) { // In case someone else baked while we were locking
-                baked = listenerSet.toArray(new RegisteredListener[listenerSet.size()]);
-                Arrays.sort(baked);
-                this.bakedListeners = baked;
+                this.bakedListeners = baked = listenerSet.toArray(new RegisteredListener[listenerSet.size()]);
             }
         }
         return baked;
     }
 
-    public Set<RegisteredListener> getListenerSet() {
-        return Collections.unmodifiableSet(listenerSet);
+    public SortedSet<RegisteredListener> getListenerSet() {
+        return immutableSet;
     }
 }

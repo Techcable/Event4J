@@ -13,6 +13,7 @@ public class EventTest {
     @Before
     public void register() {
         this.testListener = new TestListener();
+        testListener.hasCalled = false;
         eventBus.register(testListener);
     }
 
@@ -34,6 +35,19 @@ public class EventTest {
     }
 
     public class TestListener {
+
+        boolean hasCalled;
+
+        @EventHandler(priority = EventPriority.HIGHEST)
+        public void callZero(TestEvent event) {
+            hasCalled = true;
+        }
+
+        @EventHandler(priority = EventPriority.LOWEST)
+        public void callOne(TestEvent event) {
+            assertTrue(hasCalled);
+        }
+
         @EventHandler
         public void onTest(TestEvent event) {
             EventTest.this.awesome = true; // We are awesome
