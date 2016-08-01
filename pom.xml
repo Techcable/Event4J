@@ -1,10 +1,6 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>net.techcable</groupId>
-        <artifactId>parent</artifactId>
-        <version>1.0.7</version>
-    </parent>
+    <groupId>net.techcable</groupId>
     <artifactId>event4j</artifactId>
     <version>1.1.1-SNAPSHOT</version>
     <name>Event4J</name>
@@ -28,12 +24,38 @@
             <!-- We can run without ASM ;) -->
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.10</version>
+            <scope>provided</scope>
+            <!-- Clients don't need this -->
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
-    <repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
         <repository>
             <id>techcable-repo</id>
-            <url>https://repo.techcable.net/content/groups/public/</url>
+            <url>https://repo.techcable.net/content/repositories/releases/</url>
         </repository>
-    </repositories>
+        <snapshotRepository>
+            <id>techcable-repo</id>
+            <url>https://repo.techcable.net/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
