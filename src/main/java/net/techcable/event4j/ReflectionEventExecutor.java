@@ -2,14 +2,11 @@ package net.techcable.event4j;
 
 import lombok.*;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public final class ReflectionEventExecutor<E, L> implements EventExecutor<E,L> {
+public final class ReflectionEventExecutor<E, L> implements EventExecutor<E, L> {
     private final Method method;
 
     public ReflectionEventExecutor(EventBus<E, L> eventBus, Method method) {

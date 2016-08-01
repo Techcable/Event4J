@@ -29,33 +29,36 @@ public final class EventBus<E, L> {
      * @param event the event to fire
      */
     public void fire(E event) {
-        if (event == null) throw new NullPointerException("Null event"); // This should be optimized away by the JIT
+        Objects.requireNonNull(event, "Null event"); // This should be optimized away by the JIT
         HandlerList<E, L> handler = handlers.get(event.getClass());
         if (handler == null) return; // No events of said type
         handler.fire(event);
     }
 
     public void unregister(L listener) {
-        if (!listenerClass.isInstance(listener)) throw new IllegalArgumentException("Invalid listener type: "  + listener.getClass().getClass());
+        if (!listenerClass.isInstance(listener)) {
+            throw new IllegalArgumentException("Invalid listener type: "  + listener.getClass().getClass());
+        }
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!eventMarker.isMarked(method)) continue; // Not a handler
-            RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener, EventExecutor.empty());
+            RegisteredListener<E, L> registeredListener = new RegisteredListener<>(this, method, listener, EventExecutor.empty());
             handlers.get(registeredListener.getEventType()).unregister(registeredListener);
         }
     }
 
     public void register(L listener) {
-        if (listener == null) throw new NullPointerException("Null listener");
-        if (!listenerClass.isInstance(listener))
+        Objects.requireNonNull(listener, "Null listener");
+        if (!listenerClass.isInstance(listener)) {
             throw new IllegalArgumentException("Invalid listener type: " + listener.getClass().getName());
+        }
         for (Method method : listener.getClass().getDeclaredMethods()) {
             if (!eventMarker.isMarked(method)) continue; // Not a handler
-            RegisteredListener<E,L> registeredListener = new RegisteredListener<>(this, method, listener , executorFactory.create(this, method));
+            RegisteredListener<E, L> registeredListener = new RegisteredListener<>(this, method, listener, executorFactory.create(this, method));
             register(registeredListener);
         }
     }
 
-    private void register(RegisteredListener<E,L> listener) {
+    private void register(RegisteredListener<E, L> listener) {
         HandlerList<E, L> handlerList = handlers.computeIfAbsent(listener.getEventType(), (eventType) -> new HandlerList<>(EventBus.this));
         handlerList.register(listener);
     }
@@ -78,14 +81,14 @@ public final class EventBus<E, L> {
         private EventMarker eventMarker = m -> m.isAnnotationPresent(EventHandler.class) ? (MarkedEvent) m.getAnnotation(EventHandler.class).priority()::ordinal : null;
         private EventExecutor.Factory executorFactory = EventExecutor.Factory.getDefault();
 
-        public <E> Builder<E, L> eventClass(Class<E> eventClass) {
+        public <T> Builder<T, L> eventClass(Class<T> eventClass) {
             this.eventClass = Objects.requireNonNull(eventClass, "Null event class");
-            return (Builder<E, L>) this;
+            return (Builder<T, L>) this;
         }
 
-        public <L> Builder<E, L> listenerClass(Class<L> listenerClass) {
+        public <T> Builder<E, T> listenerClass(Class<T> listenerClass) {
             this.listenerClass = Objects.requireNonNull(listenerClass, "Null listener class");
-            return (Builder<E, L>) this;
+            return (Builder<E, T>) this;
         }
 
         public Builder<E, L> eventMarker(EventMarker eventMarker) {

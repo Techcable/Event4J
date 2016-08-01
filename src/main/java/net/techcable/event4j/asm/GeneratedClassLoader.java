@@ -4,8 +4,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.objectweb.asm.Type;
-
 public class GeneratedClassLoader extends ClassLoader {
     private static final ConcurrentMap<ClassLoader, GeneratedClassLoader> loaders = new ConcurrentHashMap<>();
     public static GeneratedClassLoader getLoader(ClassLoader parent) {

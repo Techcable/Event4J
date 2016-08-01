@@ -9,18 +9,18 @@ import net.techcable.event4j.marker.MarkedEvent;
 
 public final class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
     @Getter
-    protected final EventBus<E, L> eventBus;
+    private final EventBus<E, L> eventBus;
     @Getter
-    protected final L listener;
+    private final L listener;
     @Getter
-    protected final Method method;
+    private final Method method;
     private final MarkedEvent marked;
     private final EventExecutor<E, L> executor;
 
     public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener, EventExecutor<E, L> executor) {
         validate(eventBus, method);
-        this.eventBus = Objects.requireNonNull(eventBus, "Null eventBus");;
-        this.method = Objects.requireNonNull(method, "Null method");;
+        this.eventBus = Objects.requireNonNull(eventBus, "Null eventBus");
+        this.method = Objects.requireNonNull(method, "Null method");
         this.listener = Objects.requireNonNull(listener, "Null listener");
         this.executor = Objects.requireNonNull(executor, "Null executor");
         this.marked = Objects.requireNonNull(eventBus.getEventMarker().mark(method), "Null marked event");

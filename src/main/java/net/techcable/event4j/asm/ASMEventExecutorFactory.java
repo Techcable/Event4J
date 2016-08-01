@@ -1,10 +1,7 @@
 package net.techcable.event4j.asm;
 
-import lombok.*;
-
 import java.lang.reflect.Method;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,13 +17,13 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import static org.objectweb.asm.Opcodes.*;
 
 public class ASMEventExecutorFactory implements EventExecutor.Factory {
-    public static final Optional<ASMEventExecutorFactory> INSTANCE;
+    public static final ASMEventExecutorFactory INSTANCE;
     static {
-        Optional<ASMEventExecutorFactory> instance = Optional.empty();
+        ASMEventExecutorFactory instance = null;
         try {
             Class.forName("org.objectweb.asm.Opcodes");
-            instance = Optional.of(new ASMEventExecutorFactory());
-        } catch (ClassNotFoundException ignored) {}
+            instance = new ASMEventExecutorFactory();
+        } catch (ClassNotFoundException ignored) { }
         INSTANCE = instance;
     }
 
@@ -49,7 +46,7 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
         methodGenerator.returnValue();
         methodGenerator.endMethod();
         // Generate the execute method
-        methodGenerator = new GeneratorAdapter(writer.visitMethod(ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null), ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V");;
+        methodGenerator = new GeneratorAdapter(writer.visitMethod(ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null), ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V");
         methodGenerator.loadArg(0);
         methodGenerator.checkCast(Type.getType(m.getDeclaringClass()));
         methodGenerator.loadArg(1);
@@ -88,6 +85,5 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
             throw new RuntimeException("Unable to initialize " + executorClass, e);
         }
     }
-
 
 }

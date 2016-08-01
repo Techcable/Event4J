@@ -7,8 +7,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public final class MHEventExecutor<E, L> implements EventExecutor<E,L> {
-    protected final MethodHandle methodHandle;
+public final class MHEventExecutor<E, L> implements EventExecutor<E, L> {
+    private final MethodHandle methodHandle;
 
     @SneakyThrows(IllegalAccessException.class) // Wont happen
     public MHEventExecutor(EventBus<E, L> eventBus, Method method) {

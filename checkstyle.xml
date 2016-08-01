@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- Forbid trailing whitespace -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="minimum" value="0"/>
+        <property name="maximum" value="0"/>
+        <property name="message" value="Trailing whitespace"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Disallow same-line annotations on everything _but_ local variables -->
+        <module name="AnnotationLocation">
+            <property name="tokens" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF"/>
+            <property name="allowSamelineSingleParameterlessAnnotation" value="false"/>
+        </module>
+        <module name="AnnotationLocation">
+            <property name="tokens" value="VARIABLE_DEF"/>
+            <property name="allowSamelineSingleParameterlessAnnotation" value="true"/>
+        </module>
+        <!-- Only allow blocks with control flow statements -->
+        <module name="AvoidNestedBlocks"/>
+        <module name="EmptyBlock"/>
+        <!-- Only allow exceptions to be ignored if the user explicitly names the exception variable 'ignored' -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="ignored"/>
+        </module>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="NeedBraces">
+            <property name="allowSingleLineStatement" value="true"/>
+        </module>
+        <!--
+            Classes which only have private constructors can't be overriden, and are this effictively final.
+            If this is desired, users should explictly mark the class final.
+            If this isn't desired, users should provide a package-local or protected constructor
+        -->
+        <module name="FinalClass">
+            <message key="final.class" value="Class {0} should be final since it has only private constructors, and so it can't be overriden anyways."/>
+        </module>
+        <!-- Look ma, I have math: new java.lang.Math() -->
+        <module name="HideUtilityClassConstructor"/>
+        <!-- Interfaces shouldn't be used just to define constants -->
+        <module name="InterfaceIsType"/>
+        <!-- Exceptions should be immutable -->
+        <module name="MutableException"/>
+        <module name="OneTopLevelClass"/>
+        <!--
+            All fields (even immutable ones) should be hidden from public access.
+            This keeps other classes less tied to a class's internals and encourages encapsulation.
+        -->
+        <module name="VisibilityModifier">
+            <property name="allowPublicImmutableFields" value="false"/>
+            <!-- Exposing it to the package is okay because its okay since its  fine if other classes in the package are dependent on the implementation of a class -->
+            <property name="packageAllowed" value="true"/>
+        </module>
+        <!-- Make sure when a class overrides equals its 'equals(Object o)', not 'equals(Self otherInstance)' -->
+        <module name="CovariantEquals"/>
+        <module name="DefaultComesLast"/>
+        <module name="EmptyStatement"/>
+        <!-- Those that override equals(Object) shold override hashCode() -->
+        <module name="EqualsHashCode"/>
+        <!--
+            If a case statement has java code, make sure has a break.
+            This prevents missing break statements, which are a common and tricky bug.
+            If falling through is intended, you must explicitly indicate so by commenting '// fallthrough'.
+        -->
+        <module name="FallThrough"/>
+        <!-- Forbid certain classes to be used as field types, return types and parameter types, to code for an interface, not an implementation -->
+        <module name="IllegalType"/>
+        <!-- Switch statements should throw errors when an unexpected value is seen instead of doing nothing -->
+        <module name="MissingSwitchDefault"/>
+        <module name="MultipleVariableDeclarations"/>
+        <!--
+            Finalizers have few valid uses that can't be better acomplished by either ReferenceQueue or Closeable.
+            Although finalizers can help with a resource leak, they can also build up fast and cause memory leaks, and also hide the underlying problem.
+        -->
+        <module name="NoFinalizer"/>
+        <module name="OneStatementPerLine"/>
+        <!-- Group overloaded methods together -->
+        <module name="OverloadMethodsDeclarationOrder"/>
+        <!-- Who even uses the default package? -->
+        <module name="PackageDeclaration"/>
+        <!-- Check for unessicary boolean expressions like 'b == true' or 'false && b' -->
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <!-- Use the equals method, not the equals sign with string literals -->
+        <module name="StringLiteralEquality"/>
+        <module name="AvoidStarImport">
+            <property name="excludes" value="lombok"/>
+            <property name="allowStaticMemberImports" value="true"/>
+        </module>
+        <!-- Ensure we put lombok imports first, stdlib imports second, and static imports last. -->
+        <module name="CustomImportOrder">
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="customImportOrderRules"
+                      value="SPECIAL_IMPORTS###STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE###STATIC"/>
+            <!-- Put lombok imports first -->
+            <property name="specialImportsRegExp" value="^lombok"/>
+            <property name="separateLineBetweenGroups" value="true"/>
+        </module>
+        <!--
+            Checkstyle doesn't have 'native' support for seperating imports by top level domain.
+            To 'fix' this, we hardcode the order in for all the common tlds, which of course breaks if a new tld is used.
+            See checkstyle issue #941: https://github.com/checkstyle/checkstyle/issues/941
+        -->
+        <module name="ImportOrder">
+            <property name="groups" value="lombok,/javax?/,co,com,io,jline,net,org,sun"/>
+            <property name="separated" value="true"/>
+            <!-- Don't mess up static imports -->
+            <property name="option" value="bottom"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+        </module>
+        <!-- This enforces that we group imports  -->
+        <module name="RedundantImport"/>
+        <!-- Don't allow importing unused classes -->
+        <module name="UnusedImports">
+            <!-- Don't allow importing a class if its only used in the javadocs -->
+            <property name="processJavadoc" value="false"/>
+        </module>
+        <module name="AtclauseOrder">
+            <property name="tagOrder" value="@param, @return, @throws, @deprecated"/>
+        </module>
+        <module name="JavadocMethod">
+            <property name="allowThrowsTagsForSubclasses" value="true"/>
+            <property name="validateThrows" value="true"/>
+            <!-- Some things (like IOException) are obvious -->
+            <property name="allowMissingThrowsTags" value="true"/>
+            <!-- Doing 'throws IOEXception, NullPointerException' is stupid.... -->
+            <property name="allowUndeclaredRTE" value="true"/>
+            <!-- We don't have to document _everything_ -->
+            <property name="allowMissingJavadoc" value="true"/>
+            <property name="allowMissingPropertyJavadoc	" value="true"/>
+        </module>
+        <module name="JavadocParagraph"/>
+        <module name="JavadocTagContinuationIndentation"/>
+        <module name="NonEmptyAtclauseDescription"/>
+        <!-- Don't compact javadocs into a single line if they can't fit! -->
+        <module name="SingleLineJavadoc">
+            <property name="ignoreInlineTags" value="false"/>
+        </module>
+        <!-- Forbid C style arrays like 'String args[]' -->
+        <module name="ArrayTypeStyle"/>
+        <!-- Ensure comments have the same indentation level as the surroudning code -->
+        <module name="CommentsIndentation"/>
+        <module name="Indentation"/>
+        <module name="OuterTypeFilename"/>
+        <module name="UpperEll"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="AbbreviationAsWordInName">
+            <property name="ignoreFinal" value="false"/>
+        </module>
+        <!-- Type parameters must be a single capital letter -->
+        <module name="ClassTypeParameterName"/>
+        <module name="InterfaceTypeParameterName"/>
+        <module name="MethodTypeParameterName"/>
+        <!-- Constants must _ALWAYS_ be capital -->
+        <module name="ConstantName">
+            <property name="applyToPackage" value="false"/>
+            <property name="applyToPrivate" value="false"/>
+        </module>
+        <!-- Forbid 1-char variable (not parameter) names, as they are quite confusing -->
+        <module name="LocalFinalVariableName">
+            <property name="format" value="^[a-z]{2}[a-zA-Z0-9]*$"/>
+            <property name="tokens" value="VARIABLE_DEF"/>
+            <message key="name.invalidPattern"
+                     value="Parameter name ''{0}'' must be alphanumeric and start with two lowercase letters.'."/>
+        </module>
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="allowOneCharVarInForLoop" value="true"/>
+            <message key="name.invalidPattern"
+                     value="Parameter name ''{0}'' must be alphanumeric and start with a lowercase letters.'."/>
+        </module>
+        <!-- Validate field and method names to be at least two characters long and to start with a lowercase letter. -->
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern"
+                     value="Parameter name ''{0}'' must be alphanumeric and start with two lowercase letters.'."/>
+        </module>
+        <module name="MethodName">
+            <property name="format" value="^[a-z]{2}[a-zA-Z0-9_]*$"/>
+            <message key="name.invalidPattern"
+                     value="Parameter name ''{0}'' must be alphanumeric and start with two lowercase letters.'."/>
+        </module>
+        <!-- Package names must be prefixed by a valid, lowercase, alphanumeric domain name, and contain only lowercase letters, numbers or and underscore  -->
+        <module name="PackageName">
+            <property name="format" value="^(?:[a-z\d]+\.){2}[a-z\d_\.]+$"/>
+            <message key="name.invalidPattern"
+                     value="Package name ''{0}'' must be prefixed by a valid, lowercase, alphanumeric domain name, and contain only lowercase letters, numbers or an underscore."/>
+        </module>
+        <module name="ParameterName">
+            <property name="format" value="^([a-z][a-zA-Z0-9]*)$"/>
+            <message key="name.invalidPattern"
+                     value="Parameter name ''{0}'' must be alphanumeric and start with a lowercase letter.'."/>
+        </module>
+        <module name="StaticVariableName">
+            <property name="format" value="^[a-z]{2}[a-zA-Z0-9]*$"/>
+            <message key="name.invalidPattern"
+                     value="Static variable name ''{0}'' must be alphanumeric and start with two lowercase letters.'."/>
+        </module>
+        <module name="TypeName"/>
+        <!-- Whitespace -->
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+            <property name="allowEmptyLoops" value="true"/>
+            <message key="ws.notFollowed"
+                     value="WhitespaceAround: ''{0}'' is not followed by whitespace. Empty blocks may only be represented as '{}' when not part of a multi-block statement."/>
+            <message key="ws.notPreceded"
+                     value="WhitespaceAround: ''{0}'' is not preceded with whitespace."/>
+        </module>
+        <module name="EmptyForInitializerPad"/>
+        <module name="EmptyForIteratorPad"/>
+        <module name="GenericWhitespace"/>
+        <module name="MethodParamPad"/>
+        <module name="NoLineWrap"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="OperatorWrap">
+            <property name="option" value="NL"/>
+        </module>
+        <module name="ParenPad"/>
+        <module name="SeparatorWrap">
+            <property name="tokens" value="DOT"/>
+            <property name="option" value="nl"/>
+        </module>
+        <module name="SeparatorWrap">
+            <property name="tokens" value="COMMA"/>
+            <property name="option" value="EOL"/>
+        </module>
+        <module name="TypecastParenPad"/>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA,TYPECAST"/>
+        </module>
+    </module>
+</module>

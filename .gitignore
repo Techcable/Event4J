@@ -1,6 +1,7 @@
 # Maven
 target
 dependency-reduced-pom.xml
+.checkstyle-cache
 
 # IntelliJ
 .idea
