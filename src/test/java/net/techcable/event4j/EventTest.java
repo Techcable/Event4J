@@ -2,13 +2,42 @@ package net.techcable.event4j;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+@RunWith(Parameterized.class)
 public class EventTest {
-    private final EventBus eventBus = EventBus.build();
-    private boolean awesome;
+    @Parameterized.Parameters(name = "{0}")
+    public static String[] executorFactories() {
+        return new String[]{
+                "ASMExecutorFactory",
+                "MethodHandleExecutorFactory",
+                "ReflectionExecutorFactory"
+        };
+    }
+
+    private final EventBus<Object, Object> eventBus;
     private TestListener testListener;
+
+    public EventTest(String executorFactoryName) {
+        final EventExecutor.Factory executorFactory;
+        switch (executorFactoryName) {
+            case "ASMExecutorFactory":
+                executorFactory = EventExecutor.Factory.ASM_LISTENER_FACTORY;
+                break;
+            case "MethodHandleExecutorFactory":
+                executorFactory = EventExecutor.Factory.METHOD_HANDLE_LISTENER_FACTORY;
+                break;
+            case "ReflectionExecutorFactory":
+                executorFactory = EventExecutor.Factory.METHOD_HANDLE_LISTENER_FACTORY;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown executor factory name: " + executorFactoryName);
+        }
+        eventBus = EventBus.builder().executorFactory(executorFactory).build();
+    }
 
     @Before
     public void register() {
@@ -18,9 +47,9 @@ public class EventTest {
 
     @Test
     public void testEvent() {
-        awesome = false;
-        eventBus.fire(new TestEvent());
-        assertTrue(this.awesome);
+        TestEvent event = new TestEvent();
+        eventBus.fire(event);
+        assertTrue(event.awesome);
     }
 
     @Test(expected = RuntimeException.class)
@@ -33,21 +62,28 @@ public class EventTest {
         eventBus.unregister(testListener);
     }
 
-    public class TestListener {
+    public static class TestListener {
         @EventHandler
         public void onTest(TestEvent event) {
-            EventTest.this.awesome = true; // We are awesome
+            event.awesome = true; // We are awesome
         }
 
         @EventHandler
         public void onEvil(EvilEvent evilEvent) {
             throw new RuntimeException("EVILLL");
         }
+
+        @EventHandler
+        public static void onStupid(TestEvent event) {
+            // I'm a stupid person who uses static e
+        }
+
     }
 
-    public class EvilEvent {
+    public static class EvilEvent {
     }
 
-    public class TestEvent {
+    public static class TestEvent {
+        private boolean awesome;
     }
 }

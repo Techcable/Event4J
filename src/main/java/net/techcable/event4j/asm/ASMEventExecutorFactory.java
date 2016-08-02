@@ -1,6 +1,7 @@
 package net.techcable.event4j.asm;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -11,8 +12,8 @@ import net.techcable.event4j.EventExecutor;
 import net.techcable.event4j.RegisteredListener;
 
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -37,26 +38,31 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
     }
 
     private static byte[] generateEventExecutor(Method m, String name) {
+        final boolean staticMethod = Modifier.isStatic(m.getModifiers());
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
         writer.visit(V1_8, ACC_PUBLIC, name, null, "java/lang/Object", new String[] {Type.getInternalName(EventExecutor.class)});
         // Generate constructor
-        GeneratorAdapter methodGenerator = new GeneratorAdapter(writer.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null), ACC_PUBLIC, "<init>", "()V");
-        methodGenerator.loadThis();
+        MethodVisitor methodGenerator = writer.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        methodGenerator.visitVarInsn(ALOAD, 0);
         methodGenerator.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false); // Invoke the super class (Object) constructor
-        methodGenerator.returnValue();
-        methodGenerator.endMethod();
+        methodGenerator.visitInsn(RETURN);
+        methodGenerator.visitMaxs(1, 1);
+        methodGenerator.visitEnd();
         // Generate the execute method
-        methodGenerator = new GeneratorAdapter(writer.visitMethod(ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null), ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V");
-        methodGenerator.loadArg(0);
-        methodGenerator.checkCast(Type.getType(m.getDeclaringClass()));
-        methodGenerator.loadArg(1);
-        methodGenerator.checkCast(Type.getType(m.getParameterTypes()[0]));
-        methodGenerator.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(m.getDeclaringClass()), m.getName(), Type.getMethodDescriptor(m), m.getDeclaringClass().isInterface());
-        if (m.getReturnType() != void.class) {
-            methodGenerator.pop();
+        methodGenerator = writer.visitMethod(ACC_PUBLIC, "fire", "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
+        if (!staticMethod) {
+            methodGenerator.visitVarInsn(ALOAD, 1);
+            methodGenerator.visitTypeInsn(CHECKCAST, Type.getInternalName(m.getDeclaringClass()));
         }
-        methodGenerator.returnValue();
-        methodGenerator.endMethod();
+        methodGenerator.visitVarInsn(ALOAD, 2);
+        methodGenerator.visitTypeInsn(CHECKCAST, Type.getInternalName(m.getParameterTypes()[0]));
+        methodGenerator.visitMethodInsn(staticMethod ? INVOKESTATIC : INVOKEVIRTUAL, Type.getInternalName(m.getDeclaringClass()), m.getName(), Type.getMethodDescriptor(m), m.getDeclaringClass().isInterface());
+        if (m.getReturnType() != void.class) {
+            methodGenerator.visitInsn(POP);
+        }
+        methodGenerator.visitInsn(RETURN);
+        methodGenerator.visitMaxs(staticMethod ? 1 : 2, 3);
+        methodGenerator.visitEnd();
         writer.visitEnd();
         return writer.toByteArray();
     }
@@ -85,5 +91,4 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
             throw new RuntimeException("Unable to initialize " + executorClass, e);
         }
     }
-
 }

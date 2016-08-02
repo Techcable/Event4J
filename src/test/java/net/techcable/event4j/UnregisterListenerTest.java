@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class UnregisterListenerTest {
-    private final EventBus bus = EventBus.build();
+    private final EventBus<Object, Object> bus = EventBus.build();
 
     @Test
     public void testUnregister() {

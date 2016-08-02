@@ -69,7 +69,7 @@ public final class EventBus<E, L> {
         return new Builder<>();
     }
 
-    public static EventBus build() {
+    public static EventBus<Object, Object> build() {
         return builder().build();
     }
 
