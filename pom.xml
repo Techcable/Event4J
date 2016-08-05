@@ -4,6 +4,37 @@
     <artifactId>event4j</artifactId>
     <version>1.1.1-SNAPSHOT</version>
     <name>Event4J</name>
+    <inceptionYear>2015</inceptionYear>
+    <description>A lightweight, extensible and fast annotation-based event system for java.</description>
+    <url>https://github.com/Techcable/Event4J</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>Techcable</id>
+            <name>Nicholas Schlabach</name>
+            <email>Techcable@techcable.net</email>
+            <roles>
+                <role>owner</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-7</timezone>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:https://github.com/Techcable/Event4J.git</connection>
+        <developerConnection>scm:git:git@github.com:Techcable/Event4J.git</developerConnection>
+        <url>https://github.com/Techcable/Event4J</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/Techcable/Event4J/issues</url>
+    </issueManagement>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
