@@ -104,6 +104,30 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.11</version>
+                <configuration>
+                    <header>com/mycila/maven/plugin/license/templates/MIT.txt</header>
+                    <properties>
+                        <owner>Techcable</owner>
+                        <!-- The plugin uses this as the license year -->
+                        <project.inceptionYear>2015-2016</project.inceptionYear>
+                    </properties>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
