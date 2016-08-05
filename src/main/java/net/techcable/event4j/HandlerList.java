@@ -2,10 +2,9 @@ package net.techcable.event4j;
 
 import lombok.*;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @RequiredArgsConstructor
 public class HandlerList<E, L> {
@@ -27,29 +26,29 @@ public class HandlerList<E, L> {
         bakedListeners = null;
     }
 
-    private final Set<RegisteredListener<E, L>> listenerSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    private volatile RegisteredListener[] bakedListeners = null;
+    private final SortedSet<RegisteredListener<E, L>> listenerSet = Collections.synchronizedSortedSet(new TreeSet<>());
+    private volatile RegisteredListener<E, L>[] bakedListeners = null;
 
     @SuppressWarnings("unchecked")
     private RegisteredListener<E, L>[] baked() {
-        RegisteredListener[] baked = this.bakedListeners;
-        if (baked == null) baked = bakeListeners(); // Seperate method to assist inlining
+        RegisteredListener<E, L>[] baked = this.bakedListeners;
+        if (baked == null) baked = bakeListeners(); // Separate method to assist inlining
         return baked;
     }
 
-    private RegisteredListener[] bakeListeners() {
-        RegisteredListener[] baked;
+    private RegisteredListener<E, L>[] bakeListeners() {
+        RegisteredListener<E, L>[] baked;
         synchronized (this) {
             if ((baked = this.bakedListeners) == null) { // In case someone else baked while we were locking
+                //noinspection unchecked - ur mum's unchecked
                 baked = listenerSet.toArray(new RegisteredListener[listenerSet.size()]);
-                Arrays.sort(baked);
                 this.bakedListeners = baked;
             }
         }
         return baked;
     }
 
-    public Set<RegisteredListener> getListenerSet() {
-        return Collections.unmodifiableSet(listenerSet);
+    public SortedSet<RegisteredListener<E, L>> getListenerSet() {
+        return Collections.unmodifiableSortedSet(listenerSet);
     }
 }

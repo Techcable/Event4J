@@ -1,5 +1,6 @@
 package net.techcable.event4j;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,7 +71,8 @@ public class EventTest {
     public static class TestListener {
         @EventHandler
         public void onTest(TestEvent event) {
-            event.awesome = true; // We are awesome
+            Assert.assertFalse(event.awesome);
+            event.awesome = true; // We are awesome, bum bum bum bum, bum bum bum
         }
 
         @EventHandler
@@ -92,10 +94,46 @@ public class EventTest {
     private static class PrivateEvent {
     }
 
-    public static class EvilEvent {
+    private static class EvilEvent {
     }
 
-    public static class TestEvent {
-        private boolean awesome;
+
+    @Test
+    public void testPriorityOrdering() {
+        EventBus<Object, Object> eventBus = EventBus.build();
+        eventBus.register(new Object() {
+            @EventHandler(priority = EventPriority.LOWEST)
+            public void onLowest(TestEvent event) {
+                Assert.assertEquals(0, event.value++);
+            }
+
+            @EventHandler(priority = EventPriority.LOW)
+            public void onLow(TestEvent event) {
+                Assert.assertEquals(1, event.value++);
+            }
+
+            @EventHandler(priority = EventPriority.NORMAL)
+            public void onNormal(TestEvent event) {
+                Assert.assertEquals(2, event.value++);
+            }
+
+            @EventHandler(priority = EventPriority.HIGH)
+            public void onHigh(TestEvent event) {
+                Assert.assertEquals(3, event.value++);
+            }
+
+            @EventHandler(priority = EventPriority.HIGHEST)
+            public void onHighest(TestEvent event) {
+                Assert.assertEquals(4, event.value++);
+            }
+
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onMonitor(TestEvent event) {
+                Assert.assertEquals(5, event.value++);
+            }
+        });
+        TestEvent testEvent = new TestEvent();
+        eventBus.fire(testEvent);
+        Assert.assertEquals("Test event should've been fired 6 times", 6, testEvent.value);
     }
 }

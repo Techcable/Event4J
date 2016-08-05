@@ -9,17 +9,14 @@ import net.techcable.event4j.marker.MarkedEvent;
 
 public final class RegisteredListener<E, L> implements Comparable<RegisteredListener> {
     @Getter
-    private final EventBus<E, L> eventBus;
-    @Getter
     private final L listener;
     @Getter
     private final Method method;
     private final MarkedEvent marked;
     private final EventExecutor<E, L> executor;
 
-    public RegisteredListener(EventBus<E, L> eventBus, Method method, L listener, EventExecutor<E, L> executor) {
+    public RegisteredListener(EventBus<?, ?> eventBus, Method method, L listener, EventExecutor<E, L> executor) {
         validate(eventBus, method);
-        this.eventBus = Objects.requireNonNull(eventBus, "Null eventBus");
         this.method = Objects.requireNonNull(method, "Null method");
         this.listener = Objects.requireNonNull(listener, "Null listener");
         this.executor = Objects.requireNonNull(executor, "Null executor");
@@ -39,8 +36,9 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
         executor.fire(listener, event);
     }
 
+    @SuppressWarnings("unchecked") // Ur mum's unchecked
     public Class<? extends E> getEventType() {
-        return method.getParameterTypes()[0].asSubclass(eventBus.getEventClass());
+        return (Class<? extends E>) method.getParameterTypes()[0];
     }
 
     public int getPriority() {
@@ -55,20 +53,22 @@ public final class RegisteredListener<E, L> implements Comparable<RegisteredList
     @Override
     public boolean equals(Object obj) {
         if (obj == this || obj == null) return false;
-        if (obj.getClass() == RegisteredListener.class) {
+        if (obj instanceof RegisteredListener) {
             RegisteredListener other = (RegisteredListener) obj;
-            return other.eventBus == this.eventBus && other.getListener() == this.getListener() && other.getMethod().equals(this.getMethod()); // Reference equality for listeners
+            return other.getListener() == this.getListener() && other.getMethod().equals(this.getMethod()); // Reference equality for listeners
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return getMethod().hashCode() ^ getListener().hashCode(); // XOR is good for combining two hashcodes, and we don't use identity hash code since listeners may overide with a better one, and hashcodes never change
+        return getMethod().hashCode() ^ System.identityHashCode(getListener());
     }
 
     @Override
     public int compareTo(RegisteredListener other) {
-        return Integer.compare(this.getPriority(), other.getPriority());
+        return other.getMethod().equals(this.getMethod())
+                && other.getListener() == this.getListener() ? 0
+                : Integer.compare(this.getPriority(), other.getPriority());
     }
 }

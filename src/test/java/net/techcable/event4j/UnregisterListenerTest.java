@@ -17,7 +17,4 @@ public class UnregisterListenerTest {
     public void onEvent(TestEvent evt) {
         Assert.fail("Event listener wasn't unregistered");
     }
-
-    public static class TestEvent {
-    }
 }
