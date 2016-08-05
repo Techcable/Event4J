@@ -2,10 +2,12 @@ package net.techcable.event4j.asm;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import net.techcable.event4j.EventBus;
 import net.techcable.event4j.EventExecutor;
@@ -17,7 +19,7 @@ import org.objectweb.asm.Type;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class ASMEventExecutorFactory implements EventExecutor.Factory {
+public final class ASMEventExecutorFactory implements EventExecutor.Factory {
     public static final ASMEventExecutorFactory INSTANCE;
     static {
         ASMEventExecutorFactory instance = null;
@@ -28,8 +30,29 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
         INSTANCE = instance;
     }
 
-    protected static Class<? extends EventExecutor> generateExecutor(Method method) { // DOESN'T CACHE!
+    @Override
+    public boolean canAccessMethod(Method method) {
         Objects.requireNonNull(method, "Null method");
+        return Modifier.isPublic(method.getModifiers()) && Modifier.isPublic(method.getDeclaringClass().getModifiers()) && Modifier.isPublic(method.getParameterTypes()[0].getModifiers());
+    }
+
+    protected Class<? extends EventExecutor> generateExecutor(Method method) { // DOESN'T CACHE!
+        Objects.requireNonNull(method, "Null method");
+        if (!canAccessMethod(method)) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Unable to access method %s::%s(%s)",
+                            method.getDeclaringClass().getName(),
+                            method.getName(),
+                            String.join(
+                                    ",",
+                                    Arrays.stream(method.getParameterTypes())
+                                            .map(Class::getTypeName)
+                                            .collect(Collectors.toList())
+                            )
+                    )
+            );
+        }
         String name = generateName();
         byte[] data = generateEventExecutor(method, name);
         ClassLoader listenerLoader = method.getDeclaringClass().getClassLoader();
@@ -84,7 +107,7 @@ public class ASMEventExecutorFactory implements EventExecutor.Factory {
     @Override
     public <E, L> EventExecutor<E, L> create(EventBus<E, L> eventBus, Method method) {
         RegisteredListener.validate(Objects.requireNonNull(eventBus, "Null eventBus"), Objects.requireNonNull(method, "Null method"));
-        Class<? extends EventExecutor> executorClass = cache.computeIfAbsent(method, ASMEventExecutorFactory::generateExecutor);
+        Class<? extends EventExecutor> executorClass = cache.computeIfAbsent(method, this::generateExecutor);
         try {
             return executorClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {

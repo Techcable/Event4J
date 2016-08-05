@@ -18,13 +18,33 @@ public interface EventExecutor<E, L> {
     interface Factory {
         Factory METHOD_HANDLE_LISTENER_FACTORY = MHEventExecutor::new;
         Factory REFLECTION_LISTENER_FACTORY = ReflectionEventExecutor::new;
-        @SuppressWarnings("unchecked") // generics r fun
         Factory ASM_LISTENER_FACTORY = ASMEventExecutorFactory.INSTANCE;
+
+        default boolean canAccessMethod(Method method) {
+            return true;
+        }
 
         <E, L> EventExecutor<E, L> create(EventBus<E, L> eventBus, Method method);
 
         static Factory getDefault() {
-            return ASM_LISTENER_FACTORY != null ? ASM_LISTENER_FACTORY : METHOD_HANDLE_LISTENER_FACTORY;
+            return hasAsmExecutorFactory() ? getAsmExecutorFactory(METHOD_HANDLE_LISTENER_FACTORY) : METHOD_HANDLE_LISTENER_FACTORY;
+        }
+
+        static boolean hasAsmExecutorFactory() {
+            return ASMEventExecutorFactory.INSTANCE != null;
+        }
+
+        static Factory getAsmExecutorFactory(Factory fallback) {
+            return !hasAsmExecutorFactory() ? null : new Factory() {
+                @Override
+                public <E, L> EventExecutor<E, L> create(EventBus<E, L> eventBus, Method method) {
+                    if (ASMEventExecutorFactory.INSTANCE.canAccessMethod(method)) {
+                        return ASMEventExecutorFactory.INSTANCE.create(eventBus, method);
+                    } else {
+                        return fallback.create(eventBus, method);
+                    }
+                }
+            };
         }
     }
 }

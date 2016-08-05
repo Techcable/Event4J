@@ -25,7 +25,7 @@ public class EventTest {
         final EventExecutor.Factory executorFactory;
         switch (executorFactoryName) {
             case "ASMExecutorFactory":
-                executorFactory = EventExecutor.Factory.ASM_LISTENER_FACTORY;
+                executorFactory = EventExecutor.Factory.getAsmExecutorFactory(EventExecutor.Factory.METHOD_HANDLE_LISTENER_FACTORY);
                 break;
             case "MethodHandleExecutorFactory":
                 executorFactory = EventExecutor.Factory.METHOD_HANDLE_LISTENER_FACTORY;
@@ -62,6 +62,11 @@ public class EventTest {
         eventBus.unregister(testListener);
     }
 
+    @Test
+    public void testPrivateEvent() {
+        eventBus.fire(new PrivateEvent());
+    }
+
     public static class TestListener {
         @EventHandler
         public void onTest(TestEvent event) {
@@ -75,9 +80,16 @@ public class EventTest {
 
         @EventHandler
         public static void onStupid(TestEvent event) {
-            // I'm a stupid person who uses static e
+            // I'm a stupid person who uses static events
         }
 
+        @EventHandler
+        private void onPrivate(PrivateEvent event) {
+
+        }
+    }
+
+    private static class PrivateEvent {
     }
 
     public static class EvilEvent {
